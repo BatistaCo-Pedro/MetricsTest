@@ -1,3 +1,4 @@
+using Serilog;
 using ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,9 @@ app.MapGet("/weatherforecast", () =>
                     summaries[Random.Shared.Next(summaries.Length)]
                 ))
             .ToArray();
+        
+        Log.Information("Caller2 is logging something, miracle!!");
+        
         return forecast;
     })
     .WithName("GetWeatherForecast");

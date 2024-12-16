@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using Serilog;
 
 namespace ServiceDefaults;
 
@@ -67,6 +68,11 @@ public static class Extensions
 
         builder.AddOpenTelemetryExporters();
 
+        if (builder is WebApplicationBuilder webAppBuilder)
+        {
+            webAppBuilder.AddSerilog();
+        }
+
         return builder;
     }
 
@@ -118,4 +124,19 @@ public static class Extensions
 
         return app;
     }
+
+    private static WebApplicationBuilder AddSerilog(this WebApplicationBuilder builder)
+    {
+        builder.Host.UseSerilog((ctx, lc ) => lc
+            .Enrich.FromLogContext()        
+            .WriteTo.OpenTelemetry(options =>
+            {
+                options.Endpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
+                options.ResourceAttributes.Add("service.name", builder.Environment.ApplicationName);
+            })
+            .ReadFrom.Configuration(ctx.Configuration)
+        );
+
+        return builder;
+    } 
 }
